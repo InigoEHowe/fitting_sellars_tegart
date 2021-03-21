@@ -127,11 +127,11 @@ fig.title.text_font_size = '10pt'
 
 # Set plot title
 ST_values = [SigmaR,SigmaP,Q,A,n]
-values_string = ('SigmaR = ' + "{0:.2E}".format(ST_values[0]) + 
-                     'MPa, SigmaP = ' + "{0:.2E}".format(ST_values[1]) + 
-                     'MPa, Q = ' + "{0:.2E}".format(ST_values[2]) + 
-                     'MPa, A = '+ "{0:.2E}".format(ST_values[3]) + 
-                     'MPa, n = ' + "{0:.2E}".format(ST_values[4]))
+values_string = ('SigmaR = ' + "{0:.2}".format(ST_values[0]) + 
+                 'SigmaP = ' + "{0:.2}".format(ST_values[1]) + 
+                     ', Q = ' + "{0:.2E}".format(ST_values[2]) + 
+                     ', A = '+ "{0:.2E}".format(ST_values[3]) + 
+                     ', n = ' + "{0:.2}".format(ST_values[4]))
 fig.title.text = values_string
 
 #create a sliders for the variables
@@ -199,11 +199,11 @@ def callback(attrname, old, new):
     # update text box
     ST_values = [SigmaR_new,SigmaP_new,Q_new,A_new,n_new]
     
-    values_string = ('SigmaR = ' + "{0:.2E}".format(ST_values[0]) + 
-                     'MPa, SigmaP = ' + "{0:.2E}".format(ST_values[1]) + 
-                     'MPa, Q = ' + "{0:.2E}".format(ST_values[2]) + 
-                     'MPa, A = '+ "{0:.2E}".format(ST_values[3]) + 
-                     'MPa, n = ' + "{0:.2E}".format(ST_values[4]))
+    values_string = ('SigmaR = ' + "{0:.2}".format(ST_values[0]) + 
+                     ', SigmaP = ' + "{0:.2}".format(ST_values[1]) + 
+                     ', Q = ' + "{0:.2E}".format(ST_values[2]) + 
+                     ', A = '+ "{0:.2E}".format(ST_values[3]) + 
+                     ', n = ' + "{0:.2}".format(ST_values[4]))
     fig.title.text = values_string
     
 LABELS = ["SigmaR", "SigmaP", "Q", "A", "n"]
