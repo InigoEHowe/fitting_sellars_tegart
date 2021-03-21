@@ -1,1 +1,1 @@
-# fitting_sellars_tegart
+# interactive_sellars_tegart
