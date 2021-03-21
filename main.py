@@ -200,7 +200,7 @@ def callback(attrname, old, new):
     ST_values = [SigmaR_new,SigmaP_new,Q_new,A_new,n_new]
     
     values_string = ('SigmaR = ' + "{0:.3}".format(ST_values[0]) + 
-                 ', SigmaP = ' + "{0:.3}".format(ST_values[1]) + 
+                     ', SigmaP = ' + "{0:.3}".format(ST_values[1]) + 
                      ', Q = ' + "{0:.3E}".format(ST_values[2]) + 
                      ', A = '+ "{0:.3E}".format(ST_values[3]) + 
                      ', n = ' + "{0:.3}".format(ST_values[4]))
