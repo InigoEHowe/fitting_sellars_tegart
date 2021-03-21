@@ -1,10 +1,9 @@
 import numpy as np
 from bokeh.plotting import figure
 from bokeh.io import curdoc
-from bokeh.models import ColumnDataSource,Range1d, CheckboxGroup, PreText
-from bokeh.layouts import layout
+from bokeh.models import ColumnDataSource,Range1d, CheckboxGroup, RangeSlider
+from bokeh.layouts import layout, column
 from scipy.optimize import least_squares
-from decimal import Decimal
 
 def Constitutive_law(Q,A,n,SigmaP,SigmaR,Temp,Rate):    
     # Constants 
@@ -14,37 +13,20 @@ def Constitutive_law(Q,A,n,SigmaP,SigmaR,Temp,Rate):
     yield_stress = 1e6*(SigmaR*np.arcsinh((z/A)**(1.0/n)) + SigmaP)
     return yield_stress
 
+def activation_Constitutive_law_fit(i,activations,inputs,original_values):
+    if activations[0] == 1:
+        return inputs[0]
+    else:
+        return original_values[0]
+
 def Constitutive_law_fit(inputs,exp_data,activations,original_values):
     
-    # Sigma R
-    if activations[0] == 1:
-        SigmaR = inputs[0]
-    else:
-        SigmaR = original_values[0]
-        
-    # Sigma P
-    if activations[1] == 1:
-        SigmaP = inputs[1]
-    else:
-        SigmaP = original_values[1]
-        
-    # Q
-    if activations[2] == 1:
-        Q = inputs[2]
-    else:
-        Q = original_values[2]
-    
-    # A
-    if activations[3] == 1:
-        A = inputs[3]
-    else:
-        A = original_values[3]
-        
-    # n
-    if activations[4] == 1:
-        n = inputs[4]
-    else:
-        n = original_values[4]
+    # activate the inputs which have been checked
+    SigmaR = activation_Constitutive_law_fit(0,activations,inputs,original_values)
+    SigmaP = activation_Constitutive_law_fit(1,activations,inputs,original_values)
+    Q = activation_Constitutive_law_fit(2,activations,inputs,original_values)
+    A = activation_Constitutive_law_fit(3,activations,inputs,original_values)
+    n = activation_Constitutive_law_fit(4,activations,inputs,original_values)
     
     # Constants 
     R = 8.31
@@ -129,57 +111,70 @@ fig.title.text_font_size = '10pt'
 ST_values = [SigmaR,SigmaP,Q,A,n]
 values_string = ('SigmaR = ' + "{0:.3}".format(ST_values[0]) + 
                  ', SigmaP = ' + "{0:.3}".format(ST_values[1]) + 
-                     ', Q = ' + "{0:.3E}".format(ST_values[2]) + 
-                     ', A = '+ "{0:.3E}".format(ST_values[3]) + 
+                     ', Q = ' + "{0:.2E}".format(ST_values[2]) + 
+                     ', A = '+ "{0:.2E}".format(ST_values[3]) + 
                      ', n = ' + "{0:.3}".format(ST_values[4]))
 fig.title.text = values_string
+
+# deal with the case that the input value is not in the range of the sliders
+def input_outside_slider(value,slider_min,slider_max):
+    if slider_max < value:
+        return slider_max
+    elif slider_min > value:
+        return slider_min
+    else:
+        return value
+    
+def activation_value(i,activations,fitted_values,original_values):
+    if activations[i] == 1:
+        return fitted_values.x[i]
+    else:
+        return original_values[i]
+    
 
 #create a sliders for the variables
 def callback(attrname, old, new):
     
-    # Set up inputs
-    inputs      = [SigmaR,SigmaP,Q,A,n]
-    activations = np.zeros(5)
-    checked_ind = checkbox_group.active
-    
-    # make a list of the checkboxs that are active
+    # Make a list of the checkboxes that are active
+    activations     = np.zeros(5)
+    checked_ind     = checkbox_group.active
     for ind in checked_ind:
         activations[ind] = 1
+        
+    # Deal with the case where the slider values do not include the original value
+    SigmaR_input = input_outside_slider(SigmaR,SigmaR_range_slider.value[0],SigmaR_range_slider.value[1])
+    SigmaP_input = input_outside_slider(SigmaP,SigmaP_range_slider.value[0],SigmaP_range_slider.value[1])
+    Q_input = input_outside_slider(Q,Q_range_slider.value[0],Q_range_slider.value[1])
+    A_input = input_outside_slider(A,A_range_slider.value[0],A_range_slider.value[1])
+    n_input = input_outside_slider(n,n_range_slider.value[0],n_range_slider.value[1])
+    
+    # Store the original values 
+    original_values = [SigmaR,SigmaP,Q,A,n]
+    
+    # Set the inputs for optimisation
+    inputs          = [SigmaR_input,SigmaP_input,Q_input,A_input,n_input]
     
     # Least squares fit on the experimental data
     fitted_values = least_squares(Constitutive_law_fit, inputs,
-                                  bounds = [(0,0,0.5e5,1.00e7,3),(50,50,3e5,1.00e9,10)],
-                                  args=([corrected_exp_data,activations,inputs]))
+                                  bounds = [(SigmaR_range_slider.value[0],
+                                             SigmaP_range_slider.value[0],
+                                             Q_range_slider.value[0],
+                                             A_range_slider.value[0],
+                                             n_range_slider.value[0]),
+                                            (SigmaR_range_slider.value[1],
+                                             SigmaP_range_slider.value[1],
+                                             Q_range_slider.value[1],
+                                             A_range_slider.value[1],
+                                             n_range_slider.value[1])],
+                                  args=([corrected_exp_data,activations,original_values]))
     
+    # Set the new values of the ST equation
     # Sigma R
-    if activations[0] == 1:
-        SigmaR_new = fitted_values.x[0]
-    else:
-        SigmaR_new = SigmaR
-        
-    # Sigma P
-    if activations[1] == 1:
-        SigmaP_new = fitted_values.x[1]
-    else:
-        SigmaP_new = SigmaP
-        
-    # Q
-    if activations[2] == 1:
-        Q_new = fitted_values.x[2]
-    else:
-        Q_new = Q
-    
-    # A
-    if activations[3] == 1:
-        A_new = fitted_values.x[3]
-    else:
-        A_new = A
-        
-    # n
-    if activations[4] == 1:
-        n_new = fitted_values.x[4]
-    else:
-        n_new = n
+    SigmaR_new = activation_value(0,activations,fitted_values,original_values)
+    SigmaP_new = activation_value(1,activations,fitted_values,original_values)
+    Q_new = activation_value(2,activations,fitted_values,original_values)
+    A_new = activation_value(3,activations,fitted_values,original_values)
+    n_new = activation_value(4,activations,fitted_values,original_values)
     
     SellarsTegart_01 = np.zeros(len(temp_range))
     SellarsTegart_1  = np.zeros(len(temp_range))
@@ -199,16 +194,36 @@ def callback(attrname, old, new):
     # update text box
     ST_values = [SigmaR_new,SigmaP_new,Q_new,A_new,n_new]
     
+    # update the title
     values_string = ('SigmaR = ' + "{0:.3}".format(ST_values[0]) + 
                      ', SigmaP = ' + "{0:.3}".format(ST_values[1]) + 
-                     ', Q = ' + "{0:.3E}".format(ST_values[2]) + 
-                     ', A = '+ "{0:.3E}".format(ST_values[3]) + 
+                     ', Q = ' + "{0:.2E}".format(ST_values[2]) + 
+                     ', A = '+ "{0:.2E}".format(ST_values[3]) + 
                      ', n = ' + "{0:.3}".format(ST_values[4]))
     fig.title.text = values_string
-    
+
+# Set checkboxes
 LABELS = ["SigmaR", "SigmaP", "Q", "A", "n"]
 checkbox_group = CheckboxGroup(labels=LABELS, active=[0, 0, 0, 0, 0])
 checkbox_group.on_change('active', callback)
 
-plot_layout = layout([[fig,checkbox_group]])
-curdoc().add_root(plot_layout)#serve it via "bokeh serve main.py --show --allow-websocket-origin=*"
+# insert sliders for the max and min values
+SigmaR_range_slider = RangeSlider(start=0, end=100, value=(0,50), step=.1, title="SigmaR")
+SigmaP_range_slider = RangeSlider(start=0, end=100, value=(0,50), step=.1, title="SigmaP")
+Q_range_slider = RangeSlider(start=0.5e5, end=3e5, value=(0.5e5,3e5), step=1e3, title="Q")
+A_range_slider = RangeSlider(start=1.00e7, end=1.00e9, value=(1.00e7,1.00e9), step=1.00e7, title="A")
+n_range_slider = RangeSlider(start=0, end=10, value=(3,6), step=.1, title="n")
+
+# When slider values change call the callback function
+SigmaR_range_slider.on_change('value', callback)
+SigmaP_range_slider.on_change('value', callback)
+Q_range_slider.on_change('value', callback)
+A_range_slider.on_change('value', callback)
+n_range_slider.on_change('value', callback)
+
+# Set the layout of the sliders
+sliders = column(SigmaR_range_slider,SigmaP_range_slider,Q_range_slider,A_range_slider,n_range_slider)
+
+# Set layout of the figure
+plot_layout = layout([[fig,[[checkbox_group],[sliders]]]])
+curdoc().add_root(plot_layout)#serve it via "bokeh serve main.py --show --allow-websocket-origin=localhost:5006"
