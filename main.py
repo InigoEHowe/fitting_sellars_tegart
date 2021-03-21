@@ -128,7 +128,7 @@ fig.title.text_font_size = '10pt'
 # Set plot title
 ST_values = [SigmaR,SigmaP,Q,A,n]
 values_string = ('SigmaR = ' + "{0:.2}".format(ST_values[0]) + 
-                 'SigmaP = ' + "{0:.2}".format(ST_values[1]) + 
+                 ', SigmaP = ' + "{0:.2}".format(ST_values[1]) + 
                      ', Q = ' + "{0:.2E}".format(ST_values[2]) + 
                      ', A = '+ "{0:.2E}".format(ST_values[3]) + 
                      ', n = ' + "{0:.2}".format(ST_values[4]))
