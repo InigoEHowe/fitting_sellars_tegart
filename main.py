@@ -14,10 +14,10 @@ def Constitutive_law(Q,A,n,SigmaP,SigmaR,Temp,Rate):
     return yield_stress
 
 def activation_Constitutive_law_fit(i,activations,inputs,original_values):
-    if activations[0] == 1:
-        return inputs[0]
+    if activations[i] == 1:
+        return inputs[i]
     else:
-        return original_values[0]
+        return original_values[i]
 
 def Constitutive_law_fit(inputs,exp_data,activations,original_values):
     
@@ -204,7 +204,7 @@ def callback(attrname, old, new):
 
 # Set checkboxes
 LABELS = ["SigmaR", "SigmaP", "Q", "A", "n"]
-checkbox_group = CheckboxGroup(labels=LABELS, active=[0, 0, 0, 0, 0])
+checkbox_group = CheckboxGroup(labels=LABELS)
 checkbox_group.on_change('active', callback)
 
 # insert sliders for the max and min values
