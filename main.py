@@ -52,69 +52,94 @@ def Constitutive_law_fit(inputs,exp_data,activations,original_values):
 Q = 1.56e5
 A = 7.00e8
 n = 5.0
-SigmaP = 3.19
-SigmaR = 17.39
+# hom590
+SigmaP_hom590 = 3.19
+SigmaR_hom590 = 17.39
+#hom520
+SigmaP_hom520 = 10.4
+SigmaR_hom520 = 16.94
+
+# Store values to keep track of what values are
+fitted_ST_values = [SigmaR_hom590,SigmaP_hom590,Q,A,n]
 
 # Load in the experimental data
-corrected_exp_data = np.load('data/corrected_exp_data.npy')
+corrected_exp_data_hom590 = np.load('data/corrected_exp_data_hom590.npy')
+corrected_exp_data_hom520 = np.load('data/corrected_exp_data_hom520.npy')
 
-#### Produce the plot
+# Set plot conditions 
 rates = [0.1,1,10] 
 temp_range = np.arange(400,610,10)
-fig=figure() # create a figure of log(sigma) vs T
-curdoc().theme = 'light_minimal' # figure theme
-colours = ['Red','Green','Blue']
-count = 0
 
-## Plotting experimental data
-for rate in rates:
-    # Experiment
-    exp_data = corrected_exp_data[abs(corrected_exp_data[:,3]-rate)<10**(-6)]
-    fig.circle(exp_data[:,2],np.log10(exp_data[:,0]),color=colours[count],legend_label=str(rate)+'s-1')
-    count = count + 1
+def make_interactive_figure_plot(SigmaP,SigmaR,Q,A,n,corrected_exp_data,rates,temp_range,homogenisation_title):
 
-## Plotting Sellars-Tegart for the 3 rates
-SellarsTegart_01 = np.zeros(len(temp_range))
-SellarsTegart_1 = np.zeros(len(temp_range))
-SellarsTegart_10 = np.zeros(len(temp_range))
-for i in range(len(temp_range)):
-    SellarsTegart_01[i] = np.log10(Constitutive_law(Q,A,n,SigmaP,SigmaR,temp_range[i],0.1)*10**(-6)) 
-    SellarsTegart_1[i]  = np.log10(Constitutive_law(Q,A,n,SigmaP,SigmaR,temp_range[i],1  )*10**(-6)) 
-    SellarsTegart_10[i] = np.log10(Constitutive_law(Q,A,n,SigmaP,SigmaR,temp_range[i],10 )*10**(-6)) 
+    #### Produce the plot
+    fig=figure() # create a figure of log(sigma) vs T
+    curdoc().theme = 'light_minimal' # figure theme
+    colours = ['Red','Green','Blue']
+    count = 0
     
-source_01=ColumnDataSource(dict(x=temp_range, y=SellarsTegart_01))
-source_1=ColumnDataSource(dict(x=temp_range, y=SellarsTegart_1))
-source_10=ColumnDataSource(dict(x=temp_range, y=SellarsTegart_10))
-
-# Baseline
-fig.line(temp_range, SellarsTegart_01,color='Red',line_width=2,alpha=0.2)
-fig.line(temp_range, SellarsTegart_1,color='Green',line_width=2,alpha=0.2)
-fig.line(temp_range, SellarsTegart_10,color='Blue',line_width=2,alpha=0.2)
-
-# Updated
-fig.line('x','y',source=source_01,color='Red',line_width=2)
-fig.line('x','y',source=source_1,color='Green',line_width=2)
-fig.line('x','y',source=source_10,color='Blue',line_width=2)
+    ## Plotting experimental data
+    for rate in rates:
+        # Experiment
+        exp_data = corrected_exp_data[abs(corrected_exp_data[:,3]-rate)<10**(-6)]
+        fig.circle(exp_data[:,2],np.log10(exp_data[:,0]),color=colours[count],legend_label=str(rate)+'s-1')
+        count = count + 1
     
-## Set plot aesthetics
-fig.xaxis[0].axis_label = 'T / Degrees C'
-fig.yaxis[0].axis_label = 'log(Sigma / MPa)'
-fig.x_range=Range1d(400, 600)
-fig.y_range=Range1d(1, 2)
-fig.xaxis.axis_label_text_font_size = "15pt"
-fig.xaxis.major_label_text_font_size = "15pt"
-fig.yaxis.axis_label_text_font_size = "15pt"
-fig.yaxis.major_label_text_font_size = "15pt"
-fig.title.text_font_size = '10pt'
+    ## Plotting Sellars-Tegart for the 3 rates
+    SellarsTegart_01 = np.zeros(len(temp_range))
+    SellarsTegart_1 = np.zeros(len(temp_range))
+    SellarsTegart_10 = np.zeros(len(temp_range))
+    for i in range(len(temp_range)):
+        SellarsTegart_01[i] = np.log10(Constitutive_law(Q,A,n,SigmaP,SigmaR,temp_range[i],0.1)*10**(-6)) 
+        SellarsTegart_1[i]  = np.log10(Constitutive_law(Q,A,n,SigmaP,SigmaR,temp_range[i],1  )*10**(-6)) 
+        SellarsTegart_10[i] = np.log10(Constitutive_law(Q,A,n,SigmaP,SigmaR,temp_range[i],10 )*10**(-6)) 
+        
+    source_01=ColumnDataSource(dict(x=temp_range, y=SellarsTegart_01))
+    source_1=ColumnDataSource(dict(x=temp_range, y=SellarsTegart_1))
+    source_10=ColumnDataSource(dict(x=temp_range, y=SellarsTegart_10))
+    
+    # Baseline
+    fig.line(temp_range, SellarsTegart_01,color='Red',line_width=2,alpha=0.2)
+    fig.line(temp_range, SellarsTegart_1,color='Green',line_width=2,alpha=0.2)
+    fig.line(temp_range, SellarsTegart_10,color='Blue',line_width=2,alpha=0.2)
+    
+    # Updated
+    fig.line('x','y',source=source_01,color='Red',line_width=2)
+    fig.line('x','y',source=source_1,color='Green',line_width=2)
+    fig.line('x','y',source=source_10,color='Blue',line_width=2)
+        
+    ## Set plot aesthetics
+    fig.xaxis[0].axis_label = 'T / Degrees C'
+    fig.yaxis[0].axis_label = 'log(Sigma / MPa)'
+    fig.x_range=Range1d(400, 600)
+    fig.y_range=Range1d(1, 2)
+    fig.xaxis.axis_label_text_font_size = "15pt"
+    fig.xaxis.major_label_text_font_size = "15pt"
+    fig.yaxis.axis_label_text_font_size = "15pt"
+    fig.yaxis.major_label_text_font_size = "15pt"
+    fig.title.text_font_size = '10pt'
+    
+    # Set plot title
+    ST_values = [SigmaR_hom590,SigmaP_hom590,Q,A,n]
+    values_string = (homogenisation_title +
+                     'SigmaR = ' + "{0:.3}".format(ST_values[0]) + 
+                     ', SigmaP = ' + "{0:.3}".format(ST_values[1]) + 
+                         ', Q = ' + "{0:.2E}".format(ST_values[2]) + 
+                         ', A = '+ "{0:.2E}".format(ST_values[3]) + 
+                         ', n = ' + "{0:.3}".format(ST_values[4]))
+    fig.title.text = values_string
+    
+    return fig, source_01, source_1, source_10
 
-# Set plot title
-ST_values = [SigmaR,SigmaP,Q,A,n]
-values_string = ('SigmaR = ' + "{0:.3}".format(ST_values[0]) + 
-                 ', SigmaP = ' + "{0:.3}".format(ST_values[1]) + 
-                     ', Q = ' + "{0:.2E}".format(ST_values[2]) + 
-                     ', A = '+ "{0:.2E}".format(ST_values[3]) + 
-                     ', n = ' + "{0:.3}".format(ST_values[4]))
-fig.title.text = values_string
+# Plot for homogenisation of 590 for 8h
+fig_hom590, source_01_hom590, source_1_hom590, source_10_hom590 = make_interactive_figure_plot(SigmaP_hom590,
+                                                                   SigmaR_hom590,Q,A,n,corrected_exp_data_hom590,
+                                                                   rates,temp_range,'Homogenisation 590: ')
+
+# Plot for homogenisation of 520 for 2h
+fig_hom520, source_01_hom520, source_1_hom520, source_10_hom520 = make_interactive_figure_plot(SigmaP_hom520
+                                                                   ,SigmaR_hom520,Q,A,n,corrected_exp_data_hom520,
+                                                                   rates,temp_range,'Homogenisation 520: ')
 
 # deal with the case that the input value is not in the range of the sliders
 def input_outside_slider(value,slider_min,slider_max):
@@ -130,7 +155,6 @@ def activation_value(i,activations,fitted_values,original_values):
         return fitted_values.x[i]
     else:
         return original_values[i]
-    
 
 #create a sliders for the variables
 def callback(attrname, old, new):
@@ -142,14 +166,14 @@ def callback(attrname, old, new):
         activations[ind] = 1
         
     # Deal with the case where the slider values do not include the original value
-    SigmaR_input = input_outside_slider(SigmaR,SigmaR_range_slider.value[0],SigmaR_range_slider.value[1])
-    SigmaP_input = input_outside_slider(SigmaP,SigmaP_range_slider.value[0],SigmaP_range_slider.value[1])
+    SigmaR_input = input_outside_slider(SigmaR_hom590,SigmaR_range_slider.value[0],SigmaR_range_slider.value[1])
+    SigmaP_input = input_outside_slider(SigmaP_hom590,SigmaP_range_slider.value[0],SigmaP_range_slider.value[1])
     Q_input = input_outside_slider(Q,Q_range_slider.value[0],Q_range_slider.value[1])
     A_input = input_outside_slider(A,A_range_slider.value[0],A_range_slider.value[1])
     n_input = input_outside_slider(n,n_range_slider.value[0],n_range_slider.value[1])
     
     # Store the original values 
-    original_values = [SigmaR,SigmaP,Q,A,n]
+    original_values = [SigmaR_hom590,SigmaP_hom590,Q,A,n]
     
     # Set the inputs for optimisation
     inputs          = [SigmaR_input,SigmaP_input,Q_input,A_input,n_input]
@@ -166,41 +190,67 @@ def callback(attrname, old, new):
                                              Q_range_slider.value[1],
                                              A_range_slider.value[1],
                                              n_range_slider.value[1])],
-                                  args=([corrected_exp_data,activations,original_values]))
+                                  args=([corrected_exp_data_hom590,activations,original_values]))
     
     # Set the new values of the ST equation
-    # Sigma R
     SigmaR_new = activation_value(0,activations,fitted_values,original_values)
     SigmaP_new = activation_value(1,activations,fitted_values,original_values)
     Q_new = activation_value(2,activations,fitted_values,original_values)
     A_new = activation_value(3,activations,fitted_values,original_values)
     n_new = activation_value(4,activations,fitted_values,original_values)
     
-    SellarsTegart_01 = np.zeros(len(temp_range))
-    SellarsTegart_1  = np.zeros(len(temp_range))
-    SellarsTegart_10 = np.zeros(len(temp_range))
+    # Update plot for hom590
+    SellarsTegart_01_hom590 = np.zeros(len(temp_range))
+    SellarsTegart_1_hom590  = np.zeros(len(temp_range))
+    SellarsTegart_10_hom590 = np.zeros(len(temp_range))
     for i in range(len(temp_range)):
-        SellarsTegart_01[i] = np.log10(Constitutive_law(Q_new,A_new,n_new
+        SellarsTegart_01_hom590[i] = np.log10(Constitutive_law(Q_new,A_new,n_new
                                                         ,SigmaP_new,SigmaR_new,temp_range[i],0.1)*10**(-6))
-        SellarsTegart_1[i]  = np.log10(Constitutive_law(Q_new,A_new,n_new
+        SellarsTegart_1_hom590[i]  = np.log10(Constitutive_law(Q_new,A_new,n_new
                                                         ,SigmaP_new,SigmaR_new,temp_range[i],1  )*10**(-6))
-        SellarsTegart_10[i] = np.log10(Constitutive_law(Q_new,A_new,n_new
+        SellarsTegart_10_hom590[i] = np.log10(Constitutive_law(Q_new,A_new,n_new
                                                         ,SigmaP_new,SigmaR_new,temp_range[i],10)*10**(-6))
         
-    source_01.data = dict(x=temp_range, y=SellarsTegart_01)
-    source_1.data  = dict(x=temp_range, y=SellarsTegart_1) 
-    source_10.data = dict(x=temp_range, y=SellarsTegart_10) 
+    source_01_hom590.data = dict(x=temp_range, y=SellarsTegart_01_hom590)
+    source_1_hom590.data  = dict(x=temp_range, y=SellarsTegart_1_hom590) 
+    source_10_hom590.data = dict(x=temp_range, y=SellarsTegart_10_hom590) 
     
-    # update text box
+    # update title values
     ST_values = [SigmaR_new,SigmaP_new,Q_new,A_new,n_new]
     
     # update the title
-    values_string = ('SigmaR = ' + "{0:.3}".format(ST_values[0]) + 
+    values_string = ('Homogenisation 590: ' +
+                     'SigmaR = ' + "{0:.3}".format(ST_values[0]) + 
                      ', SigmaP = ' + "{0:.3}".format(ST_values[1]) + 
                      ', Q = ' + "{0:.2E}".format(ST_values[2]) + 
                      ', A = '+ "{0:.2E}".format(ST_values[3]) + 
                      ', n = ' + "{0:.3}".format(ST_values[4]))
-    fig.title.text = values_string
+    fig_hom590.title.text = values_string
+    
+    # update plot for hom520
+    SellarsTegart_01_hom520 = np.zeros(len(temp_range))
+    SellarsTegart_1_hom520  = np.zeros(len(temp_range))
+    SellarsTegart_10_hom520 = np.zeros(len(temp_range))
+    for i in range(len(temp_range)):
+        SellarsTegart_01_hom520[i] = np.log10(Constitutive_law(Q_new,A_new,n_new
+                                                        ,SigmaP_hom520,SigmaR_hom520,temp_range[i],0.1)*10**(-6))
+        SellarsTegart_1_hom520[i]  = np.log10(Constitutive_law(Q_new,A_new,n_new
+                                                        ,SigmaP_hom520,SigmaR_hom520,temp_range[i],1  )*10**(-6))
+        SellarsTegart_10_hom520[i] = np.log10(Constitutive_law(Q_new,A_new,n_new
+                                                        ,SigmaP_hom520,SigmaR_hom520,temp_range[i],10)*10**(-6))
+        
+    source_01_hom520.data = dict(x=temp_range, y=SellarsTegart_01_hom520)
+    source_1_hom520.data  = dict(x=temp_range, y=SellarsTegart_1_hom520) 
+    source_10_hom520.data = dict(x=temp_range, y=SellarsTegart_10_hom520) 
+    
+    # update the title
+    values_string = ('Homogenisation 520: ' +
+                    'SigmaR = ' + "{0:.3}".format(SigmaR_hom520) + 
+                     ', SigmaP = ' + "{0:.3}".format(SigmaP_hom520) + 
+                     ', Q = ' + "{0:.2E}".format(ST_values[2]) + 
+                     ', A = '+ "{0:.2E}".format(ST_values[3]) + 
+                     ', n = ' + "{0:.3}".format(ST_values[4]))
+    fig_hom520.title.text = values_string
 
 # Set checkboxes
 LABELS = ["SigmaR", "SigmaP", "Q", "A", "n"]
@@ -211,7 +261,7 @@ checkbox_group.on_change('active', callback)
 SigmaR_range_slider = RangeSlider(start=0, end=100, value=(0,50), step=.1, title="SigmaR")
 SigmaP_range_slider = RangeSlider(start=0, end=100, value=(0,50), step=.1, title="SigmaP")
 Q_range_slider = RangeSlider(start=0.5e5, end=3e5, value=(0.5e5,3e5), step=1e3, title="Q")
-A_range_slider = RangeSlider(start=1.00e7, end=1.00e9, value=(1.00e7,1.00e9), step=1.00e7, title="A")
+A_range_slider = RangeSlider(start=1.00e7, end=1.00e10, value=(1.00e7,1.00e9), step=1.00e7, title="A")
 n_range_slider = RangeSlider(start=0, end=10, value=(3,6), step=.1, title="n")
 
 # When slider values change call the callback function
@@ -225,5 +275,5 @@ n_range_slider.on_change('value', callback)
 sliders = column(SigmaR_range_slider,SigmaP_range_slider,Q_range_slider,A_range_slider,n_range_slider)
 
 # Set layout of the figure
-plot_layout = layout([[fig,[[checkbox_group],[sliders]]]])
+plot_layout = layout([[fig_hom590,fig_hom520,[[checkbox_group],[sliders]]]])
 curdoc().add_root(plot_layout)#serve it via "bokeh serve main.py --show --allow-websocket-origin=localhost:5006"
